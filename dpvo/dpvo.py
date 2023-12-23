@@ -166,7 +166,7 @@ class DPVO:
         poses = [self.get_pose(t) for t in range(self.counter)]
         poses = lietorch.stack(poses, dim=0)
         poses = poses.inv().data.cpu().numpy()
-        tstamps = np.array(self.tlist, dtype=np.float)
+        tstamps = np.array(self.tlist, dtype=float)
 
         if self.viewer is not None:
             self.viewer.join()
@@ -229,6 +229,7 @@ class DPVO:
         return flow.mean().item()
 
     def keyframe(self):
+        valid_keyframe = True
 
         i = self.n - self.cfg.KEYFRAME_INDEX - 1
         j = self.n - self.cfg.KEYFRAME_INDEX + 1
@@ -264,8 +265,11 @@ class DPVO:
             self.n -= 1
             self.m-= self.M
 
+            valid_keyframe = False
+
         to_remove = self.ix[self.kk] < self.n - self.cfg.REMOVAL_WINDOW
         self.remove_factors(to_remove)
+        return valid_keyframe
 
     def update(self):
         with Timer("other", enabled=self.enable_timing):
@@ -375,7 +379,7 @@ class DPVO:
         if self.n > 0 and not self.is_initialized:
             if self.motion_probe() < 2.0:
                 self.delta[self.counter - 1] = (self.counter - 2, Id[0])
-                return
+                return None
 
         self.n += 1
         self.m += self.M
@@ -389,10 +393,18 @@ class DPVO:
 
             for itr in range(12):
                 self.update()
+            return torch.arange(0, self.n - self.cfg.KEYFRAME_INDEX + 1, dtype=torch.long, device="cuda")
         
+        elif not self.is_initialized:
+            return torch.tensor(self.n - 1, dtype=torch.long, device="cuda")
+
         elif self.is_initialized:
             self.update()
-            self.keyframe()
+            if self.keyframe():
+                return torch.arange(max(self.n - self.cfg.REMOVAL_WINDOW - 1, 0), self.n - self.cfg.KEYFRAME_INDEX + 1, dtype=torch.long, device="cuda")
+            else:
+                return None       
+        return None
 
             
 
