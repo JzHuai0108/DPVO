@@ -6,12 +6,14 @@ import cv2
 import numpy as np
 import torch
 from evo.core.trajectory import PoseTrajectory3D
-from evo.tools import file_interface
+# from evo.tools import file_interface # we comment this line as this module downgrades rosbags to 0.9.19
+# which does not have Stores required by stream.py, see also
+# https://github.com/MichaelGrupp/evo/issues/636
 
 from dpvo.config import cfg
 from dpvo.dpvo import DPVO
 from dpvo.plot_utils import plot_trajectory, save_output_for_COLMAP, save_ply
-from dpvo.stream import image_stream, video_stream
+from dpvo.stream import image_stream, video_stream, bag_stream
 from dpvo.utils import Timer
 
 SKIP = 0
@@ -29,6 +31,8 @@ def run(cfg, network, imagedir, calib, stride=1, skip=0, viz=False, timeit=False
 
     if os.path.isdir(imagedir):
         reader = Process(target=image_stream, args=(queue, imagedir, calib, stride, skip))
+    elif imagedir.endswith('.bag'):
+        reader = Process(target=bag_stream, args=(queue, imagedir, calib, stride, skip))
     else:
         reader = Process(target=video_stream, args=(queue, imagedir, calib, stride, skip))
 
@@ -90,14 +94,10 @@ if __name__ == '__main__':
     if args.save_colmap:
         save_output_for_COLMAP(args.name, trajectory, points, colors, *calib)
 
-    if args.save_trajectory:
-        Path("saved_trajectories").mkdir(exist_ok=True)
-        file_interface.write_tum_trajectory_file(f"saved_trajectories/{args.name}.txt", trajectory)
+    # if args.save_trajectory:
+    #     Path("saved_trajectories").mkdir(exist_ok=True)
+    #     file_interface.write_tum_trajectory_file(f"saved_trajectories/{args.name}.txt", trajectory)
 
     if args.plot:
         Path("trajectory_plots").mkdir(exist_ok=True)
         plot_trajectory(trajectory, title=f"DPVO Trajectory Prediction for {args.name}", filename=f"trajectory_plots/{args.name}.pdf")
-
-
-        
-

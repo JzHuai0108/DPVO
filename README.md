@@ -74,6 +74,16 @@ cd ../..
 pip install ./DPViewer
 ```
 
+3. Error `FindCUDA says CUDA version is (usually determined by nvcc), but the CUDA headers say the version is 12.1`.
+```bash
+sudo apt remove nvidia-cuda-toolkit # remove system cudatoolkit 
+```
+
+4. Error `cuda compiler is not able to compile a simple test program`.
+```bash
+export PATH=/usr/local/cuda-12.1/bin:$PATH
+```
+
 For installation issues, our [Docker Image](https://github.com/princeton-vl/DPVO_Docker) supports the visualizer.
 
 ### Classical Backend (optional)
@@ -114,6 +124,24 @@ python demo.py \
     --save_colmap # save point cloud + trajectory in the standard COLMAP text format
 ```
 
+1. ImportError: libpango_windowing.so: cannot open shared object file: No such file or directory
+
+```
+export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/local/lib:$LD_LIBRARY_PATH
+```
+
+2. ImportError: /home/pi/miniconda3/envs/dpvo_env/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.30' not found (required by /usr/local/lib/libpango_core.so)
+
+```
+rm $HOME/miniconda3/envs/dpvo_env/lib/libstdc++.so.6
+cp /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30 $HOME/miniconda3/envs/dpvo_env/lib/libstdc++.so.6.0.30
+cd $HOME/miniconda3/envs/dpvo_env/lib
+ln -s libstdc++.so.6.0.30 libstdc++.so.6
+# check by the below line should output `GLIBCXX_3.4.30`
+strings libstdc++.so.6 | grep GLIBCXX_3.4.30
+
+```
+
 ### iPhone
 ```bash
 python demo.py --imagedir=movies/IMG_0492.MOV --calib=calib/iphone.txt --stride=5 --plot --viz
@@ -129,6 +157,12 @@ python demo.py --imagedir=<path to image_left> --calib=calib/tartan.txt --stride
 Download a sequence from [EuRoC](https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) (download ASL format)
 ```bash
 python demo.py --imagedir=<path to mav0/cam0/data/> --calib=calib/euroc.txt --stride=2 --plot --viz
+```
+
+### RRXIO
+Download a sequence from [RRXIO](https://christopherdoer.github.io/datasets/irs_rtvi_datasets_iros2021)
+```bash
+python demo.py --imagedir=/rrxio/irs_rtvi_datasets_2021/mocap_easy.bag --calib=calib/rrxio_thermal.yaml --stride=5 --plot --viz
 ```
 
 ## SLAM Backends
