@@ -304,9 +304,6 @@ class DPVO:
 
             if self.cfg.CLASSIC_LOOP_CLOSURE:
                 self.long_term_lc.keyframe(k)
-        to_remove = self.ix[self.kk] < self.n - self.cfg.REMOVAL_WINDOW
-        self.remove_factors(to_remove)
-        return valid_keyframe
 
         to_remove = self.ix[self.pg.kk] < self.n - self.cfg.REMOVAL_WINDOW # Remove edges falling outside the optimization window
         if self.cfg.LOOP_CLOSURE:
@@ -314,6 +311,7 @@ class DPVO:
             lc_edges = ((self.pg.jj - self.pg.ii) > 30) & (self.pg.jj > (self.n - self.cfg.OPTIMIZATION_WINDOW))
             to_remove = to_remove & ~lc_edges
         self.remove_factors(to_remove, store=True)
+        return valid_keyframe
 
     def __run_global_BA(self):
         """ Global bundle adjustment
@@ -464,24 +462,27 @@ class DPVO:
         self.append_factors(*self.__edges_forw())
         self.append_factors(*self.__edges_back())
 
+        rets = None
         if self.n == 8 and not self.is_initialized:
             self.is_initialized = True
 
             for itr in range(12):
                 self.update()
-            return torch.arange(0, self.n - self.cfg.KEYFRAME_INDEX + 1, dtype=torch.long, device="cuda")
-        
+            rets = torch.arange(0, self.n - self.cfg.KEYFRAME_INDEX + 1, dtype=torch.long, device="cuda")
+
         elif not self.is_initialized:
-            return torch.tensor(self.n - 1, dtype=torch.long, device="cuda")
+            rets = torch.tensor(self.n - 1, dtype=torch.long, device="cuda")
 
         elif self.is_initialized:
             self.update()
-            if self.keyframe():
-                return torch.arange(max(self.n - self.cfg.REMOVAL_WINDOW - 1, 0), self.n - self.cfg.KEYFRAME_INDEX + 1, dtype=torch.long, device="cuda")
+            iskf = self.keyframe()
+            if iskf:
+                rets = torch.arange(max(self.n - self.cfg.REMOVAL_WINDOW - 1, 0), self.n - self.cfg.KEYFRAME_INDEX + 1, dtype=torch.long, device="cuda")
             else:
-                return None       
-        return None
+                rets = None
 
         if self.cfg.CLASSIC_LOOP_CLOSURE:
             self.long_term_lc.attempt_loop_closure(self.n)
             self.long_term_lc.lc_callback()
+
+        return rets
