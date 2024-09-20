@@ -17,14 +17,14 @@ class PatchGraph:
         self.pmem = pmem
         self.DIM = DIM
 
-        self.n = 0      # number of frames
+        self.n = 0      # number of keyframes
         self.m = 0      # number of patches
 
         self.M = self.cfg.PATCHES_PER_FRAME
         self.N = self.cfg.BUFFER_SIZE
 
-        self.tstamps_ = np.zeros(self.N, dtype=np.int64)
-        self.poses_ = torch.zeros(self.N, 7, dtype=torch.float, device="cuda")
+        self.tstamps_ = np.zeros(self.N, dtype=np.int64)  # indices of keyframes in all processed frames
+        self.poses_ = torch.zeros(self.N, 7, dtype=torch.float, device="cuda")  # poses of keyframes
         self.patches_ = torch.zeros(self.N, self.M, 3, self.P, self.P, dtype=torch.float, device="cuda")
         self.intrinsics_ = torch.zeros(self.N, 4, dtype=torch.float, device="cuda")
 

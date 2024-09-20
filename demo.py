@@ -15,6 +15,7 @@ from dpvo.dpvo import DPVO
 from dpvo.plot_utils import plot_trajectory, save_output_for_COLMAP, save_ply
 from dpvo.stream import image_stream, video_stream, bag_stream
 from dpvo.utils import Timer
+from dpvo.write_output import write_tum_trajectory_file
 
 SKIP = 0
 
@@ -94,9 +95,9 @@ if __name__ == '__main__':
     if args.save_colmap:
         save_output_for_COLMAP(args.name, trajectory, points, colors, *calib)
 
-    # if args.save_trajectory:
-    #     Path("saved_trajectories").mkdir(exist_ok=True)
-    #     file_interface.write_tum_trajectory_file(f"saved_trajectories/{args.name}.txt", trajectory)
+    if args.save_trajectory:
+        Path("saved_trajectories").mkdir(exist_ok=True)
+        write_tum_trajectory_file(f"saved_trajectories/{args.name}.txt", trajectory)
 
     if args.plot:
         Path("trajectory_plots").mkdir(exist_ok=True)

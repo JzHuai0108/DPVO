@@ -36,8 +36,8 @@ class DPVO:
         RES = self.RES
 
         ### state attributes ###
-        self.tlist = []
-        self.counter = 0
+        self.tlist = []  # raw times of all frames
+        self.counter = 0  # number of processed frames
 
         # keep track of global-BA calls
         self.ran_global_ba = np.zeros(100000, dtype=bool)
@@ -196,6 +196,15 @@ class DPVO:
 
         # Poses: x y z qx qy qz qw
         return poses, tstamps
+
+    def get_stamped_pose(self, kf_id_list):
+        stamps_and_poses = []
+        for kf_id in kf_id_list:
+            frame_id = self.pg.tstamps_[kf_id]
+            stamp = self.tlist[frame_id]
+            pose = SE3(self.pg.poses_[kf_id])
+            stamps_and_poses.append((stamp, pose.inv().data.cpu().numpy()))
+        return stamps_and_poses
 
     def corr(self, coords, indicies=None):
         """ local correlation volume """

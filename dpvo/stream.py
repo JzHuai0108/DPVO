@@ -139,8 +139,8 @@ def bag_stream(queue, bagfile, calib_yaml, stride, skip=0):
                 msg = typestore.deserialize_ros1(rawdata, connection.msgtype)
                 rgb_image = image_msg_to_cv2(msg)
                 # Display the image (optional)
-                cv2.imshow('Image', rgb_image)
-                cv2.waitKey(1)  # Adjust the delay as needed (e.g., for video playback)
+                # cv2.imshow('Image', rgb_image)
+                # cv2.waitKey(1)  # Adjust the delay as needed (e.g., for video playback)
 
                 seqid = msg.header.seq
                 time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
@@ -148,16 +148,16 @@ def bag_stream(queue, bagfile, calib_yaml, stride, skip=0):
                     undistorted_image = rgb_image
                 else:
                     undistorted_image = cv2.remap(rgb_image, map1x, map1y, cv2.INTER_LINEAR, cv2.BORDER_CONSTANT)
-                cv2.imshow('Undistorted', undistorted_image)
-                cv2.waitKey(1)  # Adjust the delay as needed (e.g., for video playback)
+                # cv2.imshow('Undistorted', undistorted_image)
+                # cv2.waitKey(1)  # Adjust the delay as needed (e.g., for video playback)
 
-                image_list.append(undistorted_image)
+                image_list.append((time, undistorted_image))
 
-    for t, image in enumerate(image_list[skip::stride]):
-        h, w, _ = image.shape
-        image = image[:h-h%16, :w-w%16] # remove the last rows and columns of the image do not affect the K matrix.
+    for i, stamped_image in enumerate(image_list[skip::stride]):
+        h, w, _ = stamped_image[1].shape
+        image = stamped_image[1][:h-h%16, :w-w%16] # remove the last rows and columns of the image do not affect the K matrix.
         intrinsics = np.array([opt_calib['fx'], opt_calib['fy'], opt_calib['cx'], opt_calib['cy']])
-        queue.put((t, image, intrinsics))
+        queue.put((stamped_image[0], image, intrinsics))
 
     queue.put((-1, image, intrinsics))
 
