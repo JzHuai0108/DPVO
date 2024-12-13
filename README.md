@@ -84,6 +84,20 @@ sudo apt remove nvidia-cuda-toolkit # remove system cudatoolkit
 export PATH=/usr/local/cuda-12.1/bin:$PATH
 ```
 
+5. File "/home/pi/miniconda3/envs/dpvo_env/lib/python3.10/site-packages/evo/tools/file_interface.py", line 35, in <module>
+    from rosbags.serde.serdes import cdr_to_ros1
+ModuleNotFoundError: No module named 'rosbags.serde.serdes'
+[Comment out this line](https://github.com/MichaelGrupp/evo/issues/636)
+
+6. QObject::moveToThread: Current thread (0xa84b3b0) is not the object's thread (0xaa4d250).
+Cannot move to target thread (0xa84b3b0)
+
+To fix this issue, before running the program in the terminal,
+```
+export QT_QPA_PLATFORM=offscreen
+```
+
+
 For installation issues, our [Docker Image](https://github.com/princeton-vl/DPVO_Docker) supports the visualizer.
 
 ### Classical Backend (optional)
